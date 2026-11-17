@@ -8,7 +8,7 @@ Tide is a cbBTC trading bot for make.fun's "Race a BTC trading bot live for 24 h
 
 ## How it trades
 
-Bollinger mean reversion on 1-minute closes: buy the full cash when the close touches the lower band of a 240-bar Bollinger (2 standard deviations under its mean), sell the whole position when it touches the upper band. At most one order per batch, so fees stay low. A late fallback buys when the price is above its 240-bar mean if 1,200 bars have closed with no filled trade yet, so the bot never ends a window with no trade at all.
+Bollinger mean reversion on 1-minute closes: buy the full cash when the close touches the lower band of a 240-bar Bollinger (2 standard deviations under its mean), sell the whole position when it touches the upper band. At most one order per batch, so fees stay low. A fallback buys when the price is above its rising 240-bar mean if 480 bars have closed with no filled trade yet, so the bot joins a one-way uptrend from a third of the window in instead of sitting it out, and never ends a window with no trade at all.
 
 On the frozen dev window the fast trend systems all lose money to whipsaw (the EMA(8,21) baseline: 68 trades, -$106), while buy-and-hold makes +$1.07. The window is a ranging walk with a mild upward drift, so the edge is in buying the dips and selling the rallies. The bands are computed from the window's own volatility, so the rule adapts to a calm or a wild race window alike, and it works in both directions: on the dev window reversed in time it still makes money while buy-and-hold loses.
 

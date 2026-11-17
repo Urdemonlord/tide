@@ -37,13 +37,15 @@ closes = []
 # Filled orders so far, counted from the fills each batch carries.
 trades = 0
 
-# Late fallback: if the window never touches a band, the bot would end with
-# no trade at all and miss the guardrail (at least 1 trade). Once 1,200 bars
-# have closed with no filled trade, buy when the price is above its own
-# 240-bar mean: a window that strong has no dip to buy, so riding its last
-# hours long is the better seat. Never fires on the dev window (first trade
-# lands at bar 365 there).
-FALLBACK_BAR = 1200
+# Fallback for a window that never touches a band: without it the bot
+# would end with no trade at all and miss the guardrail (at least 1 trade).
+# Once 480 bars have closed with no filled trade, buy when the price is
+# above its own 240-bar mean and that mean is rising: a window that strong
+# has no dip to buy, so riding it long from a third of the way in beats
+# waiting for its last hours. Never fires on the dev window (first trade
+# lands at bar 366 there) or on a falling window (price below its mean).
+FALLBACK_BAR = 480
+TREND_LAG = 60            # bars back for the mean-rising check
 
 
 def _bands():
@@ -91,7 +93,9 @@ def on_batch(state, batch):
             "max_slippage_bps": MAX_SLIPPAGE_BPS,
         }]
     if (len(closes) >= FALLBACK_BAR and trades == 0
-            and close > mean and state.cash > 0):
+            and close > mean
+            and mean > sum(closes[-SPAN - TREND_LAG:-TREND_LAG]) / SPAN
+            and state.cash > 0):
         return [{
             "side": "buy",
             "symbol": SYMBOL,
